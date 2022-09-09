@@ -140,8 +140,6 @@ def main():
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-        finally:
-            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
