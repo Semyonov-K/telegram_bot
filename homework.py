@@ -24,7 +24,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     filename='main.log',
     filemode='w',
-    )
+)
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(handler)
@@ -52,7 +52,11 @@ def get_api_answer(current_timestamp):
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
-        homework_statuses = requests.get(ENDPOINT, headers=HEADERS, params=params)
+        homework_statuses = requests.get(
+            ENDPOINT,
+            headers=HEADERS,
+            params=params
+        )
     except Exception:
         message = 'Недоступность эндпоинта'
         logger.error(message)
@@ -100,11 +104,13 @@ def parse_status(homework):
 def check_tokens():
     """Проверка, что все токены получены."""
     if not PRACTICUM_TOKEN:
-        message = ('Отсутствует обязательная переменная окружения: PRACTICUM_TOKEN')
+        message = ("Отсутствует обязательная переменная окружения: "
+                   "'PRACTICUM_TOKEN'")
         logger.critical(message)
         return False
     if not TELEGRAM_TOKEN:
-        message = ('Отсутствует обязательная переменная окружения: TELEGRAM_TOKEN')
+        message = ("Отсутствует обязательная переменная окружения: "
+                   "'TELEGRAM_TOKEN'")
         logger.critical(message)
         return False
     if not TELEGRAM_CHAT_ID:
