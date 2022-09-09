@@ -124,7 +124,7 @@ def main():
         logger.critical('Отсутствует одна или несколько переменных окружения') 
         exit() 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = int(time.time())
+    current_timestamp = response.get('current_date', current_timestamp)
     status = ''
     while True:
         try:
