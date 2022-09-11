@@ -5,6 +5,7 @@ import sys
 import os
 import time
 
+from settings import HOMEWORK_STATUSES
 from dotenv import load_dotenv
 from http import HTTPStatus
 
@@ -19,6 +20,7 @@ RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.DEBUG,
@@ -30,15 +32,9 @@ handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(handler)
 
 
-HOMEWORK_STATUSES = {
-    'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
-    'reviewing': 'Работа взята на проверку ревьюером.',
-    'rejected': 'Работа проверена: у ревьюера есть замечания.'
-}
-
-
 def send_message(bot, message):
     """Отправка сообщений в телегу."""
+    logger.info('Начинаем отправку сообщения')
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info('Сообщение успешно доставлено')
@@ -51,6 +47,7 @@ def get_api_answer(current_timestamp):
     """Обращение к API и получение ответа."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
+    logger.info('Обращаемся к API')
     try:
         homework_statuses = requests.get(
             ENDPOINT,
@@ -60,9 +57,13 @@ def get_api_answer(current_timestamp):
     except Exception:
         message = 'Недоступность эндпоинта'
         logger.error(message)
+        raise requests.ConnectionError()
     if homework_statuses.status_code != HTTPStatus.OK:
         raise requests.ConnectionError(homework_statuses.status_code)
-    return homework_statuses.json()
+    api_answer = homework_statuses.json()
+    if len(api_answer) != 2:
+        logger.error('Некорректный ответ API')
+    return api_answer
 
 
 def check_response(response):
