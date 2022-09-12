@@ -1,15 +1,14 @@
-from json import JSONDecodeError, JSONDecoder
 import logging
-from typing import Type
 import telegram
 import requests
 import sys
 import os
 import time
 
-from settings import HOMEWORK_STATUSES
 from dotenv import load_dotenv
 from http import HTTPStatus
+from json import JSONDecodeError
+from settings import HOMEWORK_STATUSES
 
 load_dotenv()
 
@@ -57,15 +56,14 @@ def get_api_answer(current_timestamp):
             params=params
         )
     except Exception:
-        message = 'Недоступность эндпоинта'
         raise requests.ConnectionError()
     if homework_statuses.status_code != HTTPStatus.OK:
         raise requests.ConnectionError(homework_statuses.status_code)
-    api_answer = homework_statuses.json()
     try:
         return homework_statuses.json()
     except JSONDecodeError:
         logger.error('Сервер вернул невалидный json')
+
 
 def check_response(response):
     """Проверка корректности ответа API."""
@@ -128,9 +126,9 @@ def check_tokens():
 
 def main():
     """Основная логика работы бота."""
-    if not check_tokens(): 
-        logger.critical('Отсутствует одна или несколько переменных окружения') 
-        exit() 
+    if not check_tokens():
+        logger.critical('Отсутствует одна или несколько переменных окружения')
+        exit()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = 0
     status = ''
@@ -149,7 +147,7 @@ def main():
             logger.error(message)
             time.sleep(RETRY_TIME)
         finally:
-            time.sleep(RETRY_TIME) 
+            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
