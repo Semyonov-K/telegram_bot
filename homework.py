@@ -68,7 +68,7 @@ def get_api_answer(current_timestamp):
 def check_response(response):
     """Проверка корректности ответа API."""
     try:
-        homeworks_list = response['homeworks']
+        homeworks_list = response.get('homeworks')
     except KeyError as error:
         message = f'Ошибка доступа по ключу homeworks: {error}'
         logger.error(message)
@@ -135,17 +135,16 @@ def main():
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            homework = check_response(response)
-            if homework[0]['status'] != status:
-                message = parse_status(homework[0])
-                send_message(bot, message)
-                status = homework[0]['status']
+            homeworks = check_response(response)
+            if homeworks:
+                new_status = parse_status(homeworks[0])
+                if new_status[0]['status'] != status:
+                    logger.info('Старт условия')
+                    send_message(bot, message)
             current_timestamp = response['current_date']
-            time.sleep(RETRY_TIME)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-            time.sleep(RETRY_TIME)
         finally:
             time.sleep(RETRY_TIME)
 
