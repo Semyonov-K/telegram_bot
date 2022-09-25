@@ -68,7 +68,7 @@ def get_api_answer(current_timestamp):
 def check_response(response):
     """Проверка корректности ответа API."""
     try:
-        homeworks_list = response.get('homeworks')
+        homeworks_list = response.get('homeworks')[0]
     except KeyError as error:
         message = f'Ошибка доступа по ключу homeworks: {error}'
         logger.error(message)
@@ -88,6 +88,10 @@ def check_response(response):
 
 def parse_status(homework):
     """Получение статуса конкретной домашней работы."""
+    if 'homework_name' not in homework:
+        raise KeyError('Отсутствует ключ "homework_name" в ответе API')
+    if 'status' not in homework:
+        raise KeyError('Отсутствует ключ "status" в ответе API')
     try:
         homework_name = homework.get('homework_name')
         homework_status = homework.get('status')
@@ -141,6 +145,7 @@ def main():
                 if new_status[0]['status'] != status:
                     logger.info('Старт условия')
                     send_message(bot, message)
+                
             current_timestamp = response['current_date']
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
