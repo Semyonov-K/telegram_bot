@@ -46,6 +46,7 @@ def send_message(bot, message):
 
 def get_api_answer(current_timestamp):
     """Обращение к API и получение ответа."""
+    logger.info('1')
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     logger.info('Обращаемся к API')
@@ -60,13 +61,16 @@ def get_api_answer(current_timestamp):
     if homework_statuses.status_code != HTTPStatus.OK:
         raise requests.ConnectionError(homework_statuses.status_code)
     try:
-        return homework_statuses.json()
+        full_json = homework_statuses.json()
+        print(full_json)
+        return full_json
     except JSONDecodeError:
         logger.error('Сервер вернул невалидный json')
 
 
 def check_response(response):
     """Проверяет ответ от эндпоинта на корректность."""
+    logger.info('2')
     if not isinstance(response, dict):
         raise TypeError(f'{sys._getframe().f_code.co_name}. '
                         f'Response не является словарем. '
@@ -76,35 +80,44 @@ def check_response(response):
                         f'homeworks не является списком. '
                         f'Полуен тип {type(response)}')
     else:
-        homeworks = response.get('homeworks')[0]
-        if not homeworks:
-            raise TypeError(f'{sys._getframe().f_code.co_name}. '
-                                f'Не передан параметр homework')
+        logger.info('4')
+        homeworks = response.get('homeworks')
+        if homeworks:
+            print('все хорошо')
         else:
-            return homeworks
+            print('все плохо')
+        logger.info('3')
+        return homeworks
 
 
 def parse_status(homework):
     """Получение статуса конкретной домашней работы."""
+    logger.info('6')
     if 'homework_name' not in homework:
         raise KeyError('Отсутствует ключ "homework_name" в ответе API')
     if 'status' not in homework:
         raise KeyError('Отсутствует ключ "status" в ответе API')
+    logger.info('9')
     try:
-        homework_name = homework['homework_name']
-        homework_status = homework['status']
+        logger.info('10')
+        homework_name = homework.get('homework_name')
+        homework_status = homework.get('status')
+        logger.info('11')
     except KeyError as error:
         message = f'Неверное значение ключа {error}'
         logger.error(message)
     if homework_status not in HOMEWORK_STATUSES:
         message = ('Статус работы не распознан')
         logger.error(message)
+        logger.info('12')
     verdict = HOMEWORK_STATUSES[homework_status]
+    logger.info('13')
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
 def check_tokens():
     """Проверка, что все токены получены."""
+    logger.info('5')
     if not PRACTICUM_TOKEN:
         message = ("Отсутствует обязательная переменная окружения: "
                    "'PRACTICUM_TOKEN'")
@@ -138,11 +151,14 @@ def main():
         try:
             response = get_api_answer(current_timestamp)
             homeworks = check_response(response)
+            logger.info('7')
             if homeworks:
+                logger.info('8')
                 new_status = parse_status(homeworks[0])
-                if new_status[0]['status'] != status:
+                print(new_status)
+                if new_status != status:
                     logger.info('Старт условия')
-                    send_message(bot, message)
+                    send_message(bot, new_status)
                 
             current_timestamp = response['current_date']
         except Exception as error:
