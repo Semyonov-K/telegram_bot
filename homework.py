@@ -66,24 +66,22 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
-    """Проверка корректности ответа API."""
-    try:
-        homeworks_list = response.get('homeworks')[0]
-    except KeyError as error:
-        message = f'Ошибка доступа по ключу homeworks: {error}'
-        logger.error(message)
-    if homeworks_list is None:
-        message = 'В ответе API нет словаря'
-        logger.error(message)
-    if not isinstance(homeworks_list, list):
-        message = 'В ответе API представлены не списком'
-        logger.error(message)
-    if homeworks_list:
-        homeworks_status = homeworks_list[0].get('status')
-        if homeworks_status not in HOMEWORK_STATUSES:
-            message = 'Неизвестный статус домашней работы'
-            logger.error(message)
-    return homeworks_list
+    """Проверяет ответ от эндпоинта на корректность."""
+    if not isinstance(response, dict):
+        raise TypeError(f'{sys._getframe().f_code.co_name}. '
+                        f'Response не является словарем. '
+                        f'Получен тип {type(response)}')
+    elif not isinstance(response.get('homeworks'), list):
+        raise TypeError(f'{sys._getframe().f_code.co_name}. '
+                        f'homeworks не является списком. '
+                        f'Полуен тип {type(response)}')
+    else:
+        homeworks = response.get('homeworks')[0]
+        if not homeworks:
+            raise TypeError(f'{sys._getframe().f_code.co_name}. '
+                                f'Не передан параметр homework')
+        else:
+            return homeworks
 
 
 def parse_status(homework):
@@ -93,8 +91,8 @@ def parse_status(homework):
     if 'status' not in homework:
         raise KeyError('Отсутствует ключ "status" в ответе API')
     try:
-        homework_name = homework.get('homework_name')
-        homework_status = homework.get('status')
+        homework_name = homework['homework_name']
+        homework_status = homework['status']
     except KeyError as error:
         message = f'Неверное значение ключа {error}'
         logger.error(message)
